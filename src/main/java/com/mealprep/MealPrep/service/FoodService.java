@@ -18,7 +18,7 @@ import java.util.Set;
 public class FoodService {
     @Autowired
     private FoodRepository repository;
-
+    
     @Transactional
     public Food registerFood(@NotNull String foodName) {
         if (getFoodByName(foodName).isEmpty()) {
