@@ -16,8 +16,7 @@ import java.util.Set;
 
 @Service
 public class FoodService {
-    @Autowired
-    private FoodRepository repository;
+
     
     @Transactional
     public Food registerFood(@NotNull String foodName) {
