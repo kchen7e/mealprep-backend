@@ -33,6 +33,10 @@ public class UserWithAuthDTO extends User {
     @JsonProperty("password")
     private transient String password;
 
+
+    @JsonProperty("newPassword")
+    private transient String newPassword;
+
     @Setter
     @JsonProperty("token")
     private String token;

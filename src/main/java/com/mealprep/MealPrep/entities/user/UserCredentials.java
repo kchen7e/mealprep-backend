@@ -5,6 +5,7 @@ import com.mealprep.MealPrep.entities.user.Token;
 import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,6 +29,7 @@ public class UserCredentials {
     private String userName;
 
     @Getter
+    @Setter
     @Column(name = "password")
     private String password;
 

@@ -6,6 +6,7 @@ import com.mealprep.MealPrep.entities.api.user.UserWithAuthDTO;
 import com.mealprep.MealPrep.entities.user.User;
 import com.mealprep.MealPrep.entities.user.Token;
 import com.mealprep.MealPrep.entities.user.UserCredentials;
+import com.sun.tools.jconsole.JConsoleContext;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,6 +139,9 @@ public class UserService {
     @Transactional
     public Optional<User> updateUser(UserWithAuthDTO userWithAuthDTO) {
         Optional<UserWithAuthDTO> result = authenticateUser(userWithAuthDTO);
+        System.out.println(userWithAuthDTO.getUserName());
+        System.out.println(userWithAuthDTO.getFirstName());
+        System.out.println(userWithAuthDTO.getCountry());
         if (result.isPresent()) {
             Optional<User> targetUser =
                     repository.findById(result.get().getUserName());
@@ -154,8 +158,17 @@ public class UserService {
                 if (StringUtils.isNotBlank(userWithAuthDTO.getCountry())) {
                     targetUser.get().setCountry(userWithAuthDTO.getCountry());
                 }
-                if (StringUtils.isNotBlank(userWithAuthDTO.getPassword())) {
-                    targetUser.get().setCountry(userWithAuthDTO.getPassword());
+                if (StringUtils.isNotBlank(userWithAuthDTO.getNewPassword())) {
+                    Optional<UserCredentials> targetUserCredentials =
+                            credentialsRepository.findById(targetUser.get().getUserName());
+                    if (targetUserCredentials.isPresent()) {
+                        targetUserCredentials.get().setPassword(passwordEncoder.encode(result.get().getNewPassword()));
+                    } else {
+                        System.err.println("User " + result.get().getUserName() + "doesn't have credentials");
+                        credentialsRepository.save(new UserCredentials(result.get().getUserName(),
+                                                                       passwordEncoder.encode(
+                                                                               result.get().getNewPassword())));
+                    }
                 }
                 return targetUser;
             }
