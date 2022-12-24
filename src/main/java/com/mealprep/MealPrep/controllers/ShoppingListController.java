@@ -31,7 +31,7 @@ public class ShoppingListController {
 
 
     @PostMapping(value = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public Map<String, Integer> getShoppingList(@RequestBody Week week) {
+    public Map<String, Integer> getIngredientList(@RequestBody Week week) {
         Map<Recipe, Integer> recipeRecords = new HashMap<>();
         Map<Ingredient, Integer> ingredientsRecord = new HashMap<>();
         Map<String, Integer> ingredientsRecord1 = new HashMap<>();
@@ -134,4 +134,15 @@ public class ShoppingListController {
                                                                                  key)));
         return ingredientsRecord1;
     }
+
+
+//    @PostMapping(value = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE})
+//    public Map<String, Integer> getShoppingList(@RequestBody Week week) {
+//        Map<String, Integer> ingredientList = getIngredientList(week);
+//        Map<String, Integer> shoppingList = new HashMap<>();
+//
+//
+//        return shoppingList;
+//    }
+
 }
