@@ -6,7 +6,11 @@ plugins {
 
 group = 'com.mealprep'
 version = '0.5.1'
-sourceCompatibility = '17'
+
+
+java {
+	sourceCompatibility = '17'
+}
 
 repositories {
 	mavenCentral()
@@ -20,12 +24,12 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-crypto:6.0.0'
 	implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
-	compileOnly 'org.projectlombok:lombok:1.18.28'
-	annotationProcessor 'org.projectlombok:lombok:1.18.28'
+	compileOnly 'org.projectlombok:lombok:1.18.30'
+	annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testCompileOnly 'org.projectlombok:lombok:1.18.24'
-	testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
+	testCompileOnly 'org.projectlombok:lombok:1.18.30'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
 }
 
