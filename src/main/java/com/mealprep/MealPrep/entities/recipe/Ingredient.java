@@ -8,6 +8,8 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Getter
@@ -32,17 +34,25 @@ public class Ingredient {
   private String displayName;
 
   @Setter
-  @Column(name = "nutrients")
   @JsonProperty("nutrients")
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinColumn(name = "nutrient", referencedColumnName = "nutrient_name")
+  @Fetch(FetchMode.SUBSELECT)
+  @JoinTable(
+      name = "ingredient_nutrient",
+      joinColumns = @JoinColumn(name = "ingredient_name", referencedColumnName = "ingredient_name"),
+      inverseJoinColumns =
+          @JoinColumn(name = "nutrient_name", referencedColumnName = "nutrient_name"))
   private Set<Nutrient> nutrients;
 
   @Setter
-  @Column(name = "dependencies")
   @JsonProperty("dependencies")
   @ManyToMany(fetch = FetchType.LAZY)
-  @JoinColumn(name = "ingredient", referencedColumnName = "ingredient_name")
+  @Fetch(FetchMode.SUBSELECT)
+  @JoinTable(
+      name = "ingredient_dependency",
+      joinColumns = @JoinColumn(name = "ingredient_name", referencedColumnName = "ingredient_name"),
+      inverseJoinColumns =
+          @JoinColumn(name = "dependent_ingredient_name", referencedColumnName = "ingredient_name"))
   private Set<Ingredient> dependencies;
 
   @Setter

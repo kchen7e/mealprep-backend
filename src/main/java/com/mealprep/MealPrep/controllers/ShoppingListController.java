@@ -34,8 +34,8 @@ public class ShoppingListController {
             day -> {
               var breakfast = day.getBreakfast();
               breakfast.forEach(
-                  recipeAPI -> {
-                    var recipe = recipeService.getRecipeByName(recipeAPI.getRecipeName());
+                  recipeDTO -> {
+                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
                     if (recipe.isPresent()) {
                       recipeRecords.putIfAbsent(recipe.get(), 0);
                       recipeRecords.computeIfPresent(recipe.get(), (k, v) -> v + 1);
@@ -73,8 +73,8 @@ public class ShoppingListController {
                   });
               var lunch = day.getLunch();
               lunch.forEach(
-                  recipeAPI -> {
-                    var recipe = recipeService.getRecipeByName(recipeAPI.getRecipeName());
+                  recipeDTO -> {
+                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
                     if (recipe.isEmpty()) return;
                     recipeRecords.putIfAbsent(recipe.get(), 0);
                     recipeRecords.computeIfPresent(recipe.get(), (k, v) -> v + 1);
@@ -109,8 +109,8 @@ public class ShoppingListController {
                   });
               var dinner = day.getDinner();
               dinner.forEach(
-                  recipeAPI -> {
-                    var recipe = recipeService.getRecipeByName(recipeAPI.getRecipeName());
+                  recipeDTO -> {
+                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
                     if (recipe.isPresent()) {
 
                       recipeRecords.putIfAbsent(recipe.get(), 0);

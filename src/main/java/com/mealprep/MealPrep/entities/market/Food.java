@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 @Getter
 @Table(name = "food")
@@ -22,15 +24,9 @@ public class Food {
     WINTER
   }
 
-  //    @Id
-  //    @GeneratedValue(strategy = GenerationType.AUTO)
-  //    @Column(name = "id", nullable = false)
-  //    @JsonProperty("id")
-  //    private Long id;
-
   @Id
   @JsonProperty("foodName")
-  @Column(name = "food_name")
+  @Column(name = "food_name", nullable = false, unique = true) // Explicit unique constraint
   String foodName;
 
   @JsonProperty("displayName")
@@ -49,10 +45,13 @@ public class Food {
   @Column(name = "unit")
   Unit unit;
 
-  @Column(name = "nutrients")
   @JsonProperty("nutrients")
-  @ManyToMany
-  @JoinColumn(name = "nutrient", referencedColumnName = "nutrient_name")
+  @ManyToMany(fetch = FetchType.LAZY) // No cascading here either (Nutrient is also a lookup table)
+  @JoinTable(
+      name = "food_nutrient",
+      joinColumns = @JoinColumn(name = "food_name", referencedColumnName = "food_name"),
+      inverseJoinColumns =
+          @JoinColumn(name = "nutrient_name", referencedColumnName = "nutrient_name"))
   private final Set<Nutrient> nutrients;
 
   @Column(name = "seasonality")
@@ -66,34 +65,45 @@ public class Food {
   @Setter
   private Set<CommercialForm> foundAs;
 
-  @Column(name = "for_ingredients")
-  @ManyToMany(cascade = CascadeType.ALL)
-  @JoinColumn(name = "ingredient", referencedColumnName = "ingredient_name")
+  // ✅ FIX: Removed CascadeType.PERSIST/MERGE (critical for deadlock prevention)
+  @ManyToMany(fetch = FetchType.LAZY)
+  @Fetch(FetchMode.SUBSELECT)
+  @JoinTable(
+      name = "food_ingredient",
+      joinColumns = @JoinColumn(name = "food_name", referencedColumnName = "food_name"),
+      inverseJoinColumns =
+          @JoinColumn(name = "ingredient_name", referencedColumnName = "ingredient_name"))
   private final Set<Ingredient> forIngredients;
 
+  // ✅ Improved constructor (avoids nulls for collections)
   public Food() {
-    seasonality = new HashSet<>();
-    nutrients = new HashSet<>();
-    foundAs = new HashSet<>();
-    forIngredients = new HashSet<>();
-    unit = new Unit();
-    readilyAvailable = true;
-    category = "";
+    this.seasonality = new HashSet<>();
+    this.nutrients = new HashSet<>();
+    this.foundAs = new HashSet<>();
+    this.forIngredients = new HashSet<>();
+    this.unit = new Unit();
+    this.readilyAvailable = true;
+    this.category = "";
   }
 
   public Food(String foodName) {
-    displayName = foodName;
+    this.displayName = foodName;
     this.foodName = foodName.toLowerCase();
-    seasonality = new HashSet<>();
-    nutrients = new HashSet<>();
-    foundAs = new HashSet<>();
-    forIngredients = new HashSet<>();
-    unit = new Unit();
-    readilyAvailable = true;
+    this.seasonality = new HashSet<>();
+    this.nutrients = new HashSet<>();
+    this.foundAs = new HashSet<>();
+    this.forIngredients = new HashSet<>();
+    this.unit = new Unit();
+    this.readilyAvailable = true;
   }
 
   public void setFoodName(String foodName) {
-    displayName = foodName;
+    this.displayName = foodName;
     this.foodName = foodName.toLowerCase();
+  }
+
+  // ✅ Helper method to add ingredients (controlled insertion)
+  public void addIngredient(Ingredient ingredient) {
+    this.forIngredients.add(ingredient);
   }
 }

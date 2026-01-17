@@ -37,8 +37,10 @@ public class Recipe {
 
   @Setter
   @JsonProperty("ingredients")
-  @JoinColumn(name = "ingredient", referencedColumnName = "ingredient_name")
   @ElementCollection
+  @CollectionTable(
+      name = "recipe_ingredients",
+      joinColumns = @JoinColumn(name = "recipe_name", referencedColumnName = "recipe_name"))
   private Set<RecipeIngredient> ingredients;
 
   @Setter
