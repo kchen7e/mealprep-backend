@@ -1,25 +1,21 @@
 package com.mealprep.MealPrep.entities.api.ingredient;
 
 import com.mealprep.MealPrep.entities.recipe.Ingredient;
-import com.sun.istack.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.Set;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
 public class IngredientDependenciesDTO extends IngredientDTO {
 
-    @Getter
-    @Setter
-    Set<Ingredient> ingredients;
+  @Getter @Setter Set<Ingredient> ingredients;
 
-//    public IngredientDependenciesAPI(@NotNull String ingredientName) {
-//        super(ingredientName);
-//    }
+  //    public IngredientDependenciesAPI(@NonNull String ingredientName) {
+  //        super(ingredientName);
+  //    }
 
-    public IngredientDependenciesDTO(@NotNull String ingredientName,
-                                     Set<Ingredient> ingredients) {
-        super(ingredientName);
-        this.ingredients = ingredients;
-    }
+  public IngredientDependenciesDTO(@NonNull String ingredientName, Set<Ingredient> ingredients) {
+    super(ingredientName);
+    this.ingredients = ingredients;
+  }
 }

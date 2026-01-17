@@ -5,133 +5,158 @@ import com.mealprep.MealPrep.database.RecipeRepository;
 import com.mealprep.MealPrep.entities.recipe.Ingredient;
 import com.mealprep.MealPrep.entities.recipe.Recipe;
 import com.mealprep.MealPrep.entities.recipe.RecipeIngredient;
-import com.sun.istack.NotNull;
+import java.io.InputStream;
+import java.util.*;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
-
-
 @Service
 public class RecipeService {
-    @Autowired
-    private RecipeRepository repository;
-    @Autowired
-    private IngredientRepository ingredientRepository;
+  @Autowired private RecipeRepository repository;
+  @Autowired private IngredientRepository ingredientRepository;
+  @Autowired private StorageService storageService;
 
-    @Transactional
-    public Recipe registerRecipe(@NonNull Recipe newRecipe) {
-        if (repository.findById(newRecipe.getRecipeName()).isPresent()) {
-            return repository.findById(newRecipe.getRecipeName()).get();
-        }
+  @Value("${minio.bucket.recipe:recipe-images}")
+  private String recipeBucket;
 
-        if (!CollectionUtils.isEmpty(newRecipe.getIngredients())) {
-            newRecipe.getIngredients().forEach(recipeIngredient -> {
+  @Transactional
+  public Recipe registerRecipe(@NonNull Recipe newRecipe) {
+    if (repository.findById(newRecipe.getRecipeName()).isPresent()) {
+      return repository.findById(newRecipe.getRecipeName()).get();
+    }
+
+    if (!CollectionUtils.isEmpty(newRecipe.getIngredients())) {
+      newRecipe
+          .getIngredients()
+          .forEach(
+              recipeIngredient -> {
                 if (ingredientRepository.findById(recipeIngredient.getIngredientName()).isEmpty()) {
-                    Ingredient newIngredient =
-                            new Ingredient(recipeIngredient.getDisplayName());
-                    ingredientRepository.save(newIngredient);
+                  Ingredient newIngredient = new Ingredient(recipeIngredient.getDisplayName());
+                  ingredientRepository.save(newIngredient);
                 }
-            });
-        }
-        Recipe consolidatedNewRecipe;
-        if (StringUtils.isNotBlank(newRecipe.getDisplayName()) && !newRecipe.getDisplayName().equals(newRecipe.getRecipeName())) {
-            consolidatedNewRecipe = new Recipe(newRecipe.getDisplayName());
-        } else {
-            consolidatedNewRecipe = new Recipe(newRecipe.getRecipeName());
-        }
-        consolidatedNewRecipe.setIngredients(newRecipe.getIngredients());
-        consolidatedNewRecipe.setMealType(newRecipe.getMealType());
-        consolidatedNewRecipe.setSeasonality(newRecipe.getSeasonality());
-        return repository.save(consolidatedNewRecipe);
+              });
     }
-
-    public Optional<Recipe> getRecipeByName(String recipeName) {
-        return repository.findById(recipeName);
+    Recipe consolidatedNewRecipe;
+    if (StringUtils.isNotBlank(newRecipe.getDisplayName())
+        && !newRecipe.getDisplayName().equals(newRecipe.getRecipeName())) {
+      consolidatedNewRecipe = new Recipe(newRecipe.getDisplayName());
+    } else {
+      consolidatedNewRecipe = new Recipe(newRecipe.getRecipeName());
     }
+    consolidatedNewRecipe.setIngredients(newRecipe.getIngredients());
+    consolidatedNewRecipe.setMealType(newRecipe.getMealType());
+    consolidatedNewRecipe.setSeasonality(newRecipe.getSeasonality());
+    return repository.save(consolidatedNewRecipe);
+  }
 
-    public Iterable<Recipe> getAllRecipes() {
-        return repository.findAll();
-    }
+  public Optional<Recipe> getRecipeByName(String recipeName) {
+    return repository.findById(recipeName);
+  }
 
-    @Transactional
-    public Optional<Recipe> updateSeasonality(String recipeName,
-                                              List<String> seasonality) {
-        Optional<Recipe> targetRecipe = repository.findById(recipeName);
-        List<Recipe.Season> seasonalityEnum = seasonality.stream().map(
-                Recipe.Season::valueOf).toList();
-        targetRecipe.ifPresent(recipe -> {
-            recipe.getSeasonality().clear();
-            recipe.getSeasonality().addAll(seasonalityEnum);
+  public Iterable<Recipe> getAllRecipes() {
+    return repository.findAll();
+  }
+
+  @Transactional
+  public Optional<Recipe> updateSeasonality(String recipeName, List<String> seasonality) {
+    Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    List<Recipe.Season> seasonalityEnum = seasonality.stream().map(Recipe.Season::valueOf).toList();
+    targetRecipe.ifPresent(
+        recipe -> {
+          recipe.getSeasonality().clear();
+          recipe.getSeasonality().addAll(seasonalityEnum);
         });
-        return targetRecipe;
-    }
+    return targetRecipe;
+  }
 
-    @Transactional
-    public Optional<Recipe> updateSeasonality(String recipeName,
-                                              Set<Recipe.Season> seasonality) {
+  @Transactional
+  public Optional<Recipe> updateSeasonality(String recipeName, Set<Recipe.Season> seasonality) {
 
-        Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    Optional<Recipe> targetRecipe = repository.findById(recipeName);
 
-        targetRecipe.ifPresent( recipe -> {
-            targetRecipe.get().getSeasonality().clear();
-            targetRecipe.get().getSeasonality().addAll(seasonality);
+    targetRecipe.ifPresent(
+        recipe -> {
+          targetRecipe.get().getSeasonality().clear();
+          targetRecipe.get().getSeasonality().addAll(seasonality);
         });
-        return targetRecipe;
-    }
+    return targetRecipe;
+  }
 
-    @Transactional
-    public Optional<Recipe> addIngredient(@NotNull  String recipeName,
-                                          @NotNull RecipeIngredient recipeIngredient) {
-        Optional<Recipe> targetRecipe = repository.findById(recipeName);
-        if (targetRecipe.isPresent()) {
-            if (targetRecipe.get().getIngredients().stream().noneMatch(
-                    existingIngredient -> existingIngredient.getIngredientName().equals(
-                            recipeIngredient.getIngredientName()))) {
-                targetRecipe.get().getIngredients().add(recipeIngredient);
-            }
-            if (ingredientRepository.findById(recipeIngredient.getIngredientName()).isEmpty()) {
-                Ingredient newIngredient = new Ingredient(recipeIngredient.getIngredientName());
-                ingredientRepository.save(newIngredient);
-            }
-        }
-        return repository.findById(recipeName);
+  @Transactional
+  public Optional<Recipe> addIngredient(
+      @NonNull String recipeName, @NonNull RecipeIngredient recipeIngredient) {
+    Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    if (targetRecipe.isPresent()) {
+      if (targetRecipe.get().getIngredients().stream()
+          .noneMatch(
+              existingIngredient ->
+                  existingIngredient
+                      .getIngredientName()
+                      .equals(recipeIngredient.getIngredientName()))) {
+        targetRecipe.get().getIngredients().add(recipeIngredient);
+      }
+      if (ingredientRepository.findById(recipeIngredient.getIngredientName()).isEmpty()) {
+        Ingredient newIngredient = new Ingredient(recipeIngredient.getIngredientName());
+        ingredientRepository.save(newIngredient);
+      }
     }
+    return repository.findById(recipeName);
+  }
 
-    @Transactional
-    public Optional<Recipe> updateIngredients(String recipeName,
-                                           Set<RecipeIngredient> ingredients) {
-        Optional<Recipe> targetRecipe = getRecipeByName(recipeName);
-        if (targetRecipe.isPresent()) {
-            ingredients.forEach(
-                    ingredient -> {
-                        if (ingredientRepository.findById(ingredient.getIngredientName()).isEmpty()) {
-                            Ingredient newIngredient =
-                                    new Ingredient(ingredient.getIngredientName());
-                            ingredientRepository.save(newIngredient);
-                        }
-                    });
-            if (!targetRecipe.get().getIngredients().equals(ingredients)) {
-                targetRecipe.get().getIngredients().clear();
-                targetRecipe.get().getIngredients().addAll(ingredients);
+  @Transactional
+  public Optional<Recipe> updateIngredients(String recipeName, Set<RecipeIngredient> ingredients) {
+    Optional<Recipe> targetRecipe = getRecipeByName(recipeName);
+    if (targetRecipe.isPresent()) {
+      ingredients.forEach(
+          ingredient -> {
+            if (ingredientRepository.findById(ingredient.getIngredientName()).isEmpty()) {
+              Ingredient newIngredient = new Ingredient(ingredient.getIngredientName());
+              ingredientRepository.save(newIngredient);
             }
-        }
-        return repository.findById(recipeName);
+          });
+      if (!targetRecipe.get().getIngredients().equals(ingredients)) {
+        targetRecipe.get().getIngredients().clear();
+        targetRecipe.get().getIngredients().addAll(ingredients);
+      }
     }
+    return repository.findById(recipeName);
+  }
 
-    @Transactional
-    public Optional<Recipe> updateMealType(String recipeName,
-                                           Set<Recipe.MealType> mealType) {
-        Optional<Recipe> targetRecipe = repository.findById(recipeName);
-        targetRecipe.ifPresent(recipe -> {
-                recipe.getMealType().clear();
-                recipe.getMealType().addAll(mealType);
+  @Transactional
+  public Optional<Recipe> updateMealType(String recipeName, Set<Recipe.MealType> mealType) {
+    Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    targetRecipe.ifPresent(
+        recipe -> {
+          recipe.getMealType().clear();
+          recipe.getMealType().addAll(mealType);
         });
-        return targetRecipe;
-    }
+    return targetRecipe;
+  }
 
+  @Transactional
+  public Optional<Recipe> updateImage(
+      String recipeName, InputStream imageData, long size, String contentType) {
+    Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    if (targetRecipe.isPresent()) {
+      String key = "recipes/" + recipeName + getExtension(contentType);
+      storageService.upload(recipeBucket, key, imageData, size, contentType);
+      targetRecipe.get().setImageUrl(key);
+    }
+    return targetRecipe;
+  }
+
+  private String getExtension(String contentType) {
+    return switch (contentType) {
+      case "image/jpeg" -> ".jpg";
+      case "image/png" -> ".png";
+      case "image/gif" -> ".gif";
+      case "image/webp" -> ".webp";
+      default -> "";
+    };
+  }
 }

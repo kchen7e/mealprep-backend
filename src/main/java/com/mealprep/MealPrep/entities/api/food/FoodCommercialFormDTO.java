@@ -1,25 +1,20 @@
 package com.mealprep.MealPrep.entities.api.food;
 
 import com.mealprep.MealPrep.entities.market.CommercialForm;
-import com.sun.istack.NotNull;
+import java.util.Set;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
-import java.util.Set;
-
 public class FoodCommercialFormDTO extends FoodDTO {
-    @Getter
-    @Setter
-    public Set<CommercialForm> foundAs;
+  @Getter @Setter public Set<CommercialForm> foundAs;
 
+  //    public FoodCommercialFormAPI(@NonNull String foodName) {
+  //        super(foodName);
+  //    }
 
-//    public FoodCommercialFormAPI(@NotNull String foodName) {
-//        super(foodName);
-//    }
-
-    public FoodCommercialFormDTO(@NotNull String foodName,
-                                 Set<CommercialForm> forms) {
-        super(foodName);
-        this.foundAs = forms;
-    }
+  public FoodCommercialFormDTO(@NonNull String foodName, Set<CommercialForm> forms) {
+    super(foodName);
+    this.foundAs = forms;
+  }
 }

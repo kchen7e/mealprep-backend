@@ -1,20 +1,14 @@
 package com.mealprep.MealPrep.entities.api.user;
 
-
-import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
+import lombok.NonNull;
 
 @NoArgsConstructor
 public class UserDTO {
-    @Getter
-    private String userName;
+  @Getter private String userName;
 
-
-
-    public UserDTO(@NotNull String userName) {
-        this.userName = userName.toLowerCase();
-    }
-
+  public UserDTO(@NonNull String userName) {
+    this.userName = userName.toLowerCase();
+  }
 }
