@@ -59,7 +59,7 @@ public class UserWithAuthDTO extends User {
 
     public void setPassword(String passwordBase64) {
         if (StringUtils.isNotBlank(passwordBase64)) {
-        this.password = Arrays.toString(Base64.getDecoder().decode(
+        this.password = new String(Base64.getDecoder().decode(
                 passwordBase64));
         } else {
             password = "";

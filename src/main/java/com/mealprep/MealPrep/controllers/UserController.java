@@ -4,6 +4,7 @@ import com.mealprep.MealPrep.entities.api.user.UserWithAuthDTO;
 import com.mealprep.MealPrep.entities.user.User;
 import com.mealprep.MealPrep.service.UserService;
 import org.apache.commons.lang3.StringUtils;
+import org.aspectj.weaver.patterns.IToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -49,9 +50,7 @@ public class UserController {
                                   body(userService.getUserByUserName(result.get().getUserName()));
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());
-
     }
-
 
     @PatchMapping(value = "/update", consumes = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<Optional<User>> updateUser(
@@ -64,5 +63,15 @@ public class UserController {
             }
 
         return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(Optional.empty());
+    }
+
+    @PostMapping(value = "/logout", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<Optional<User>> logOutUser(
+    @RequestBody UserWithAuthDTO userWithAuthDTO) {
+        System.out.printf("user is is %s%n", userWithAuthDTO);
+//        String token = userWithAuthDTO.getToken();
+//        System.out.printf("token is %s%n", token);
+        return ResponseEntity.status(HttpStatus.OK).body(
+                Optional.empty());
     }
 }
