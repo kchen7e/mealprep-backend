@@ -35,20 +35,17 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.30")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testCompileOnly("org.projectlombok:lombok:1.18.30")
     testAnnotationProcessor("org.projectlombok:lombok:1.18.30")
 }
 
-tasks.build {                                                                                                                                                                                                  
-      dependsOn(tasks.clean)                                                                                                                                                                                     
-  }
-  
- tasks.jar {                                                                                                                                                                                                    
-      enabled = false                                                                                                                                                                                            
-  } 
-
 tasks.test {
     useJUnitPlatform()
+    onlyIf {
+        project.fileTree("src/test/java").matching { include("**/*.java") }.files.isNotEmpty()
+    }
 }
 
 spotless {
