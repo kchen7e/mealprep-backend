@@ -7,18 +7,19 @@ import com.mealprep.MealPrep.entities.recipe.RecipeIngredient;
 import com.mealprep.MealPrep.service.IngredientService;
 import com.mealprep.MealPrep.service.RecipeService;
 import java.util.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/shopping")
-@CrossOrigin(origins = "*")
-@ResponseBody
 public class ShoppingListController {
-  @Autowired RecipeService recipeService;
+  private final RecipeService recipeService;
+  private final IngredientService ingredientService;
 
-  @Autowired IngredientService ingredientService;
+  public ShoppingListController(RecipeService recipeService, IngredientService ingredientService) {
+    this.recipeService = recipeService;
+    this.ingredientService = ingredientService;
+  }
 
   @PostMapping(
       value = "/get",

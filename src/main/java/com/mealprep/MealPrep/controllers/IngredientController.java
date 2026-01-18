@@ -6,28 +6,25 @@ import com.mealprep.MealPrep.entities.api.ingredient.IngredientSeasonalityDTO;
 import com.mealprep.MealPrep.entities.recipe.Ingredient;
 import com.mealprep.MealPrep.service.IngredientService;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ingredient")
-@CrossOrigin(origins = "*")
-@ResponseBody
 public class IngredientController {
-  @Autowired IngredientService ingredientService;
+  private final IngredientService ingredientService;
+
+  public IngredientController(IngredientService ingredientService) {
+    this.ingredientService = ingredientService;
+  }
 
   @PostMapping(
       value = "/register",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<Object> registerIngredient(
-      @RequestHeader(value = "Authorization") String token, @RequestBody IngredientDTO params) {
-    if (!token.equalsIgnoreCase("test")) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("");
-    }
+  public ResponseEntity<Object> registerIngredient(@RequestBody IngredientDTO params) {
+    // Authorization handled by Spring Security filter
     return ResponseEntity.status(HttpStatus.OK)
         .body(ingredientService.registerIngredient(params.getIngredientName()));
   }
@@ -71,16 +68,4 @@ public class IngredientController {
       return ResponseEntity.status(HttpStatus.OK).body(result);
     }
   }
-
-  //    @ExceptionHandler({NullPointerException.class, IllegalArgumentException.class,
-  // HttpMessageNotReadableException.class})
-  //    @ResponseStatus(HttpStatus.BAD_REQUEST)
-  //    public IngredientAPI hanldeReqeustBodyParseError() {
-  //        IngredientAPI exampleIngredientAPI = new IngredientAPI("ingredient name");
-  //        return exampleIngredientAPI;
-  //    }
-
-  @ExceptionHandler({MissingRequestHeaderException.class})
-  @ResponseStatus(HttpStatus.UNAUTHORIZED)
-  public void handleHeaderError() {}
 }

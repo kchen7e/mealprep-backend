@@ -15,7 +15,7 @@ public class User {
 
   @Id
   @Column(name = "username")
-  @JsonProperty("username")
+  @JsonProperty("userName")
   private String userName;
 
   @Column(name = "email")

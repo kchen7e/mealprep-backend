@@ -5,7 +5,6 @@ import com.mealprep.MealPrep.entities.user.User;
 import com.mealprep.MealPrep.service.UserService;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,10 +12,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
-@CrossOrigin(origins = "*")
-@ResponseBody
 public class UserController {
-  @Autowired UserService userService;
+  private final UserService userService;
+
+  public UserController(UserService userService) {
+    this.userService = userService;
+  }
 
   @PostMapping(
       value = "/register",
@@ -27,8 +28,7 @@ public class UserController {
 
       if (result.isPresent()) {
         return ResponseEntity.status(HttpStatus.CREATED)
-            .header("Access-Control-Expose-Headers", "Authorization")
-            .header("Authorization", result.get().getToken())
+            .header("Authorization", "Bearer " + result.get().getToken())
             .body(userService.getUserByUserName(userWithAuthDTO.getUserName()));
       }
     }
@@ -42,8 +42,7 @@ public class UserController {
     Optional<UserWithAuthDTO> result = userService.authenticateUser(userWithAuthDTO);
     if (result.isPresent()) {
       return ResponseEntity.status(HttpStatus.ACCEPTED)
-          .header("Access-Control-Expose-Headers", "Authorization")
-          .header("Authorization", result.get().getToken())
+          .header("Authorization", "Bearer " + result.get().getToken())
           .body(userService.getUserByUserName(result.get().getUserName()));
     }
     return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Optional.empty());

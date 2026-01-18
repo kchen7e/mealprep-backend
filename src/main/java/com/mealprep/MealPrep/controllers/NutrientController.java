@@ -4,16 +4,17 @@ import com.mealprep.MealPrep.entities.nutrient.Nutrient;
 import com.mealprep.MealPrep.service.NutrientService;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/nutrient")
-@CrossOrigin(origins = "*")
-@ResponseBody
 public class NutrientController {
-  @Autowired NutrientService nutrientService;
+  private final NutrientService nutrientService;
+
+  public NutrientController(NutrientService nutrientService) {
+    this.nutrientService = nutrientService;
+  }
 
   @PostMapping(
       value = "/register",

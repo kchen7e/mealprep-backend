@@ -1,25 +1,34 @@
 package com.mealprep.MealPrep.service;
 
+import com.mealprep.MealPrep.config.JwtUtil;
 import com.mealprep.MealPrep.database.UserCredentialsRepository;
 import com.mealprep.MealPrep.database.UserRepository;
 import com.mealprep.MealPrep.entities.api.user.UserWithAuthDTO;
-import com.mealprep.MealPrep.entities.user.Token;
 import com.mealprep.MealPrep.entities.user.User;
 import com.mealprep.MealPrep.entities.user.UserCredentials;
 import java.util.Optional;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
-  @Autowired private UserRepository repository;
-  @Autowired private UserCredentialsRepository credentialsRepository;
+  private final UserRepository repository;
+  private final UserCredentialsRepository credentialsRepository;
+  private final Argon2PasswordEncoder passwordEncoder;
+  private final JwtUtil jwtUtil;
 
-  @Autowired private Argon2PasswordEncoder passwordEncoder;
+  public UserService(
+      UserRepository repository,
+      UserCredentialsRepository credentialsRepository,
+      Argon2PasswordEncoder passwordEncoder,
+      JwtUtil jwtUtil) {
+    this.repository = repository;
+    this.credentialsRepository = credentialsRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtUtil = jwtUtil;
+  }
 
   //    @Transactional
   //    public User registerUser(String userName) {
@@ -40,11 +49,11 @@ public class UserService {
       UserCredentials newUserCredentials =
           new UserCredentials(
               newUser.getUserName(), passwordEncoder.encode(userWithAuthDTO.getPassword()));
-      Token newUserToken = new Token(RandomStringUtils.randomAlphabetic(10));
-      newUserCredentials.addToken(newUserToken);
       credentialsRepository.save(newUserCredentials);
-      userWithAuthDTO.setToken(newUserToken.getToken());
       repository.save(newUser);
+      // Generate JWT token
+      String jwtToken = jwtUtil.generateToken(newUser.getUserName());
+      userWithAuthDTO.setToken(jwtToken);
       return Optional.of(userWithAuthDTO);
     } else {
       return Optional.empty();
@@ -53,77 +62,48 @@ public class UserService {
 
   @Transactional
   public Optional<UserWithAuthDTO> authenticateUser(UserWithAuthDTO userWithAuthDTO) {
+    // JWT token validation - if valid JWT provided, authenticate
+    if (StringUtils.isNotBlank(userWithAuthDTO.getToken())) {
+      if (jwtUtil.validateToken(userWithAuthDTO.getToken())) {
+        String username = jwtUtil.extractUsername(userWithAuthDTO.getToken());
+        userWithAuthDTO.setUserName(username);
+        return Optional.of(userWithAuthDTO);
+      }
+    }
+
+    // Password-based authentication
     if (StringUtils.isNotBlank(userWithAuthDTO.getPassword())
-        || StringUtils.isNotBlank(userWithAuthDTO.getToken())) {
+        && StringUtils.isNotBlank(userWithAuthDTO.getUserName())) {
       Optional<User> userInDB = getUserByUserName(userWithAuthDTO.getUserName());
       if (userInDB.isPresent()) {
         Optional<UserCredentials> userCredentials =
             credentialsRepository.findById(userInDB.get().getUserName());
-        if (userCredentials.isPresent()) {
-          // if a valid token is present then pass back info
-          if (StringUtils.isNotBlank(userWithAuthDTO.getToken())) {
-            if (userCredentials.get().validateToken(userWithAuthDTO.getToken())) {
-              return Optional.of(userWithAuthDTO);
-            }
-          }
-          // no valid token, check for master password match
-          if (StringUtils.isNotBlank(userWithAuthDTO.getPassword())) {
-            if (passwordEncoder.matches(
+        if (userCredentials.isPresent()
+            && passwordEncoder.matches(
                 userWithAuthDTO.getPassword(), userCredentials.get().getPassword())) {
-              // password is okay, get a new token
-              Token newUserToken = new Token(RandomStringUtils.randomAlphabetic(10));
-              userCredentials.get().addToken(newUserToken);
-              userWithAuthDTO.setToken(newUserToken.getToken());
-              return Optional.of(userWithAuthDTO);
-            } else {
-              // a valid user without valid token or password
-              return Optional.empty();
-            }
-          }
+          // Password valid - generate JWT
+          String jwtToken = jwtUtil.generateToken(userInDB.get().getUserName());
+          userWithAuthDTO.setToken(jwtToken);
+          return Optional.of(userWithAuthDTO);
         }
       }
     }
-    // no token, no password
+
     return Optional.empty();
   }
 
-  public Optional<User> validateToken(UserWithAuthDTO userWithAuthDTO) {
-    Optional<User> userInDB = repository.findById(userWithAuthDTO.getUserName());
-    if (userInDB.isPresent()) {
-      Optional<UserCredentials> userCredentials =
-          credentialsRepository.findById(userWithAuthDTO.getUserName());
-      if (userCredentials.isPresent()
-          && userCredentials.get().validateToken(userWithAuthDTO.getToken())) {
-        return userInDB;
-      }
+  public Optional<User> validateToken(String token) {
+    if (StringUtils.isBlank(token) || !jwtUtil.validateToken(token)) {
+      return Optional.empty();
     }
-    return Optional.empty();
+    String username = jwtUtil.extractUsername(token);
+    return repository.findById(username);
   }
 
-  @Transactional
   public boolean logoutUser(UserWithAuthDTO userWithAuthDTO) {
-    if (StringUtils.isBlank(userWithAuthDTO.getToken())) {
-      return false;
-    }
-    Optional<UserCredentials> userCredentials =
-        credentialsRepository.findById(userWithAuthDTO.getUserName());
-    if (userCredentials.isPresent()) {
-      userCredentials.get().invalidateToken(userWithAuthDTO.getToken());
-      return true;
-    }
-    return false;
-  }
-
-  @Transactional
-  public Optional<User> addTokenToUser(UserWithAuthDTO userWithAuthDTO, Token token) {
-    Optional<User> userInDB = repository.findById(userWithAuthDTO.getUserName());
-    if (userInDB.isPresent()) {
-      Optional<UserCredentials> credentials =
-          credentialsRepository.findById(userWithAuthDTO.getUserName());
-      credentials.ifPresent(userCredentials -> userCredentials.addToken(token));
-      return userInDB;
-    }
-    return Optional.empty();
+    // JWT is stateless - logout is handled client-side by deleting the token
+    // This method exists for API compatibility
+    return true;
   }
 
   public Optional<User> getUserByUserName(String userName) {

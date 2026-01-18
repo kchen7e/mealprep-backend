@@ -8,18 +8,19 @@ import com.mealprep.MealPrep.entities.recipe.Recipe;
 import com.mealprep.MealPrep.entities.recipe.RecipeIngredient;
 import com.mealprep.MealPrep.service.RecipeService;
 import java.util.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/recipe")
-@CrossOrigin(origins = "*")
 public class RecipeController {
-  @Autowired RecipeService recipeService;
+  private final RecipeService recipeService;
+
+  public RecipeController(RecipeService recipeService) {
+    this.recipeService = recipeService;
+  }
 
   @PostMapping(
       value = "/get",
@@ -61,12 +62,8 @@ public class RecipeController {
   @PostMapping(
       value = "/register",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  public ResponseEntity<Recipe> registerRecipe(
-      @RequestHeader(value = "Authorization") String token, @RequestBody Recipe newRecipe) {
-
-    if (!token.equalsIgnoreCase("test")) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(newRecipe);
-    }
+  public ResponseEntity<Recipe> registerRecipe(@RequestBody Recipe newRecipe) {
+    // Authorization handled by Spring Security filter
     return ResponseEntity.status(HttpStatus.OK).body(recipeService.registerRecipe(newRecipe));
   }
 
@@ -111,22 +108,4 @@ public class RecipeController {
       return ResponseEntity.status(HttpStatus.OK).body(result);
     }
   }
-
-  //    @ExceptionHandler({NullPointerException.class,
-  //                       IllegalArgumentException.class,
-  //                       HttpMessageNotReadableException.class})
-  //    @ResponseStatus(HttpStatus.BAD_REQUEST)
-  //    public Recipe hanldeReqeustBodyParseError() {
-  //        Recipe exampleRecipe = new Recipe("recipe name");
-  //        Unit exampleUnit = new Unit("G", "0");
-  //        RecipeIngredient newRecipeIngredient =
-  //                new RecipeIngredient("example ingredient name", exampleUnit);
-  //        exampleRecipe.getIngredients().add(newRecipeIngredient);
-  //        System.err.println();
-  //        return exampleRecipe;
-  //    }
-
-  @ExceptionHandler({MissingRequestHeaderException.class})
-  @ResponseStatus(HttpStatus.UNAUTHORIZED)
-  public void handleHeaderError() {}
 }
