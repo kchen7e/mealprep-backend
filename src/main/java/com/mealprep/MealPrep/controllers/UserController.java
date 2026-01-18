@@ -65,9 +65,7 @@ public class UserController {
       value = "/logout",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
   public ResponseEntity<Optional<User>> logOutUser(@RequestBody UserWithAuthDTO userWithAuthDTO) {
-    System.out.printf("user is is %s%n", userWithAuthDTO);
-    //        String token = userWithAuthDTO.getToken();
-    //        System.out.printf("token is %s%n", token);
+    userService.logoutUser(userWithAuthDTO);
     return ResponseEntity.status(HttpStatus.OK).body(Optional.empty());
   }
 }

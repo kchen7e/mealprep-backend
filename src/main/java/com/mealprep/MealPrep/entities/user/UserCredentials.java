@@ -55,6 +55,10 @@ public class UserCredentials {
     tokens.removeIf(target -> target.tokenEqual(token));
   }
 
+  public void invalidateToken(@NonNull String token) {
+    tokens.removeIf(target -> target.tokenEqual(token));
+  }
+
   public boolean validateToken(@NonNull Token token) {
     return tokens.contains(token);
   }

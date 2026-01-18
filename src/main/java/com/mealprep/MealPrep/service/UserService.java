@@ -101,6 +101,20 @@ public class UserService {
   }
 
   @Transactional
+  public boolean logoutUser(UserWithAuthDTO userWithAuthDTO) {
+    if (StringUtils.isBlank(userWithAuthDTO.getToken())) {
+      return false;
+    }
+    Optional<UserCredentials> userCredentials =
+        credentialsRepository.findById(userWithAuthDTO.getUserName());
+    if (userCredentials.isPresent()) {
+      userCredentials.get().invalidateToken(userWithAuthDTO.getToken());
+      return true;
+    }
+    return false;
+  }
+
+  @Transactional
   public Optional<User> addTokenToUser(UserWithAuthDTO userWithAuthDTO, Token token) {
     Optional<User> userInDB = repository.findById(userWithAuthDTO.getUserName());
     if (userInDB.isPresent()) {
