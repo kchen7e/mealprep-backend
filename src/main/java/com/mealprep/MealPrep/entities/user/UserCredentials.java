@@ -16,8 +16,18 @@ public class UserCredentials {
 
   @Id
   @Getter
-  @JoinColumn(name = "account", referencedColumnName = "username")
+  @Column(name = "username")
   private String userName;
+
+  // Proper relationship to User (account table)
+  @OneToOne
+  @JoinColumn(
+      name = "username",
+      referencedColumnName = "username",
+      insertable = false,
+      updatable = false)
+  @Getter
+  private User user;
 
   @Getter
   @Setter

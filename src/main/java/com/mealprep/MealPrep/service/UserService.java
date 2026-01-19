@@ -135,19 +135,19 @@ public class UserService {
         if (StringUtils.isNotBlank(userWithAuthDTO.getCountry())) {
           targetUser.get().setCountry(userWithAuthDTO.getCountry());
         }
-        if (StringUtils.isNotBlank(userWithAuthDTO.getNewPassword())) {
+        if (StringUtils.isNotBlank(userWithAuthDTO.getPassword())) {
           Optional<UserCredentials> targetUserCredentials =
               credentialsRepository.findById(targetUser.get().getUserName());
           if (targetUserCredentials.isPresent()) {
             targetUserCredentials
                 .get()
-                .setPassword(passwordEncoder.encode(result.get().getNewPassword()));
+                .setPassword(passwordEncoder.encode(userWithAuthDTO.getPassword()));
           } else {
             System.err.println("User " + result.get().getUserName() + "doesn't have credentials");
             credentialsRepository.save(
                 new UserCredentials(
                     result.get().getUserName(),
-                    passwordEncoder.encode(result.get().getNewPassword())));
+                    passwordEncoder.encode(userWithAuthDTO.getPassword())));
           }
         }
         return targetUser;

@@ -26,10 +26,7 @@ public class UserWithAuthDTO extends User {
   private String country;
 
   @JsonProperty("password")
-  private transient String password;
-
-  @JsonProperty("newPassword")
-  private transient String newPassword;
+  private String password;
 
   @Setter
   @JsonProperty("token")
