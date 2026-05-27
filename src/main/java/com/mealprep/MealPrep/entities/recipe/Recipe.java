@@ -46,12 +46,14 @@ public class Recipe {
   @Setter
   @Column(name = "seasonality")
   @ElementCollection
+  @Enumerated(EnumType.STRING)
   @JsonProperty("seasonality")
   private Set<Season> seasonality;
 
   @Setter
   @Column(name = "meal_type")
   @ElementCollection
+  @Enumerated(EnumType.STRING)
   @JsonProperty("mealType")
   private Set<MealType> mealType;
 

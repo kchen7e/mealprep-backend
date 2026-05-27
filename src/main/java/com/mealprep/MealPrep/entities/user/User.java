@@ -14,11 +14,11 @@ import org.apache.commons.lang3.StringUtils;
 public class User {
 
   @Id
-  @Column(name = "username")
+  @Column(name = "username", nullable = false, unique = true)
   @JsonProperty("userName")
   private String userName;
 
-  @Column(name = "email")
+  @Column(name = "email", nullable = false, unique = true)
   @JsonProperty("email")
   private String email;
 
