@@ -15,7 +15,6 @@ public class PasswordTools {
     int memory = 4096; // memory costs
     int iterations = 3;
     return new Argon2PasswordEncoder(saltLength, hashLength, parallelism, memory, iterations);
-    // Argon2PasswordEncoder requires implementation 'org
-    // .bouncycastle:bcprov-jdk15on:1.64'
+    // Argon2PasswordEncoder requires org.bouncycastle:bcprov-jdk18on
   }
 }
