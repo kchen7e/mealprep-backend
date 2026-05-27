@@ -27,6 +27,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       throws ServletException, IOException {
 
     String authHeader = request.getHeader("Authorization");
+    String path = request.getRequestURI();
+    String method = request.getMethod();
+    String contentType = request.getContentType();
 
     if (authHeader != null && authHeader.startsWith("Bearer ")) {
       String token = authHeader.substring(7);
@@ -39,7 +42,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        System.out.println("[JWT] AUTH OK: " + method + " " + path + " user=" + username);
+      } else {
+        System.out.println(
+            "[JWT] INVALID TOKEN: "
+                + method
+                + " "
+                + path
+                + " token="
+                + token.substring(0, Math.min(20, token.length()))
+                + "...");
       }
+    } else {
+      System.out.println(
+          "[JWT] NO AUTH: "
+              + method
+              + " "
+              + path
+              + " contentType="
+              + contentType
+              + " hasAuthHeader="
+              + (authHeader != null));
     }
 
     filterChain.doFilter(request, response);

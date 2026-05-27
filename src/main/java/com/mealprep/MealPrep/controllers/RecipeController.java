@@ -8,10 +8,12 @@ import com.mealprep.MealPrep.entities.recipe.Recipe;
 import com.mealprep.MealPrep.entities.recipe.RecipeIngredient;
 import com.mealprep.MealPrep.service.RecipeService;
 import java.util.*;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/recipe")
@@ -107,5 +109,34 @@ public class RecipeController {
     } else {
       return ResponseEntity.status(HttpStatus.OK).body(result);
     }
+  }
+
+  @PostMapping(
+      value = "/{recipeName}/image",
+      consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+  public ResponseEntity<Optional<Recipe>> uploadImage(
+      @PathVariable String recipeName, @RequestParam("file") MultipartFile file) {
+    try {
+      Optional<Recipe> result =
+          recipeService.updateImage(
+              recipeName, file.getInputStream(), file.getSize(), file.getContentType());
+      if (result.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(result);
+      }
+      return ResponseEntity.status(HttpStatus.OK).body(result);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Optional.empty());
+    }
+  }
+
+  @GetMapping(value = "/{recipeName}/image")
+  public ResponseEntity<InputStreamResource> getImage(@PathVariable String recipeName) {
+    Optional<RecipeService.ImageData> imageData = recipeService.getImage(recipeName);
+    if (imageData.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType(imageData.get().contentType()))
+        .body(new InputStreamResource(imageData.get().stream()));
   }
 }

@@ -89,11 +89,37 @@ public class RecipeService {
       throw new IllegalArgumentException("Recipe name cannot be empty or blank");
     }
 
-    // Idempotent check - return existing recipe if present (avoids duplicate inserts)
+    // Idempotent check - update existing recipe if present (ensures re-seed fixes stale data)
     Optional<Recipe> existingRecipe = repository.findById(newRecipe.getRecipeName());
     if (existingRecipe.isPresent()) {
-      log.debug("Recipe {} already exists - returning existing", newRecipe.getRecipeName());
-      return existingRecipe.get();
+      Recipe existing = existingRecipe.get();
+      boolean updated = false;
+
+      if (!CollectionUtils.isEmpty(newRecipe.getIngredients())) {
+        existing.getIngredients().clear();
+        existing.getIngredients().addAll(newRecipe.getIngredients());
+        updated = true;
+      }
+      if (!CollectionUtils.isEmpty(newRecipe.getMealType())) {
+        existing.getMealType().clear();
+        existing.getMealType().addAll(newRecipe.getMealType());
+        updated = true;
+      }
+      if (!CollectionUtils.isEmpty(newRecipe.getSeasonality())) {
+        existing.getSeasonality().clear();
+        existing.getSeasonality().addAll(newRecipe.getSeasonality());
+        updated = true;
+      }
+
+      if (updated) {
+        repository.save(existing);
+        log.debug("Recipe {} already existed - updated with new data", newRecipe.getRecipeName());
+      } else {
+        log.debug(
+            "Recipe {} already exists - returning existing (no new data)",
+            newRecipe.getRecipeName());
+      }
+      return existing;
     }
 
     // Critical: Sort ingredients alphabetically to eliminate circular deadlocks
@@ -175,6 +201,31 @@ public class RecipeService {
   public Iterable<Recipe> getAllRecipes() {
     return repository.findAll();
   }
+
+  /**
+   * Downloads a recipe's image from MinIO storage.
+   *
+   * @param recipeName Name of the recipe
+   * @return ImageData containing input stream and content type, or empty if no image
+   */
+  public Optional<ImageData> getImage(String recipeName) {
+    String normalizedName = recipeName.toLowerCase();
+    Optional<Recipe> recipe = repository.findById(normalizedName);
+    if (recipe.isEmpty() || recipe.get().getImageUrl() == null) {
+      return Optional.empty();
+    }
+    String key = recipe.get().getImageUrl();
+    InputStream stream = storageService.download(recipeBucket, key);
+    String contentType =
+        key.endsWith(".png")
+            ? "image/png"
+            : key.endsWith(".gif")
+                ? "image/gif"
+                : key.endsWith(".webp") ? "image/webp" : "image/jpeg";
+    return Optional.of(new ImageData(stream, contentType));
+  }
+
+  public record ImageData(InputStream stream, String contentType) {}
 
   // -------------------------------------------------------------------------
   // Write Operations (transactional with retry - deadlock-prone operations)
@@ -354,14 +405,18 @@ public class RecipeService {
   @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
   public Optional<Recipe> updateImage(
       String recipeName, InputStream imageData, long size, String contentType) {
-    Optional<Recipe> targetRecipe = repository.findById(recipeName);
+    String normalizedName = recipeName.toLowerCase();
+    Optional<Recipe> targetRecipe = repository.findById(normalizedName);
 
     if (targetRecipe.isPresent() && imageData != null) {
-      String key = "recipes/" + recipeName + getExtension(contentType);
+      String key =
+          "recipes/"
+              + normalizedName.replace(" ", "_").replace("&", "and").replace("'", "")
+              + getExtension(contentType);
       // Upload to MinIO (idempotent operation - safe to retry)
       storageService.upload(recipeBucket, key, imageData, size, contentType);
       targetRecipe.get().setImageUrl(key);
-      log.debug("Updated image for recipe {} (MinIO key: {})", recipeName, key);
+      log.debug("Updated image for recipe {} (MinIO key: {})", normalizedName, key);
     }
 
     return targetRecipe;

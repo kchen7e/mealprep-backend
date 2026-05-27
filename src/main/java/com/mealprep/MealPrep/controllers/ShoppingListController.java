@@ -52,6 +52,10 @@ public class ShoppingListController {
     String ingredientName = recipeIngredient.getIngredientName();
     Unit unit = recipeIngredient.getUnit();
 
+    if (unit == null) {
+      unit = new Unit();
+    }
+
     ingredientUnits.merge(ingredientName, unit, Unit::combine);
   }
 }

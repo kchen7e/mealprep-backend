@@ -47,6 +47,9 @@ public class SecurityConfig {
                         "/api/food/example",
                         "/api/food/example/")
                     .permitAll()
+                    // GET image endpoint - no auth required (public images)
+                    .requestMatchers("/api/recipe/*/image")
+                    .permitAll()
                     // GET requests for recipes/ingredients - no auth required
                     .requestMatchers(
                         "/api/recipe/get/**", "/api/ingredient/get", "/api/ingredient/get/")

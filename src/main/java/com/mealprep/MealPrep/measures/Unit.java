@@ -1,6 +1,9 @@
 package com.mealprep.MealPrep.measures;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.util.EnumSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -30,7 +33,11 @@ public class Unit {
   private static final Set<Type> VOLUME_UNITS =
       EnumSet.of(Type.ML, Type.L, Type.GAL, Type.C, Type.PT, Type.QT, Type.TSP, Type.TBSP);
 
+  @JsonProperty("measure")
   private Float measure;
+
+  @Enumerated(EnumType.STRING)
+  @JsonProperty("type")
   private Type type;
 
   public Unit() {

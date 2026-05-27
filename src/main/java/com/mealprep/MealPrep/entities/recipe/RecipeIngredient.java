@@ -1,5 +1,6 @@
 package com.mealprep.MealPrep.entities.recipe;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mealprep.MealPrep.measures.Unit;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,13 +8,18 @@ import lombok.*;
 @Embeddable
 @NoArgsConstructor
 public final class RecipeIngredient {
-  @JoinColumn(name = "ingredient", referencedColumnName = "ingredient_name")
+  @Column(name = "ingredient_name")
   @Getter
   private String ingredientName;
 
-  @Getter @Setter private Unit unit;
+  @JsonProperty("unit")
+  @Getter
+  @Setter
+  private Unit unit = new Unit();
 
-  @Getter private String displayName;
+  @Column(name = "display_name")
+  @Getter
+  private String displayName;
 
   public RecipeIngredient(@NonNull String ingredientName) {
     displayName = ingredientName;
