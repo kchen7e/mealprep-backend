@@ -3,11 +3,13 @@ package com.mealprep.MealPrep.config;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -31,14 +33,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth
-                    // Public endpoints - no auth required
-                    .requestMatchers(
-                        "/api/user/register",
-                        "/api/user/register/",
-                        "/api/user/get",
-                        "/api/user/get/",
-                        "/api/user/logout",
-                        "/api/user/logout/")
+                    // Public endpoints - no auth required (use AntPathRequestMatcher to avoid
+                    // MvcRequestMatcher issues with POST/consumes constraints)
+                    .requestMatchers(new AntPathRequestMatcher("/api/user/**"))
+                    .permitAll()
+                    // Public user registration via POST
+                    .requestMatchers(HttpMethod.POST, "/api/user/register", "/api/user/register/")
                     .permitAll()
                     // Example endpoints - no auth required
                     .requestMatchers(
@@ -54,8 +54,8 @@ public class SecurityConfig {
                     .requestMatchers(
                         "/api/recipe/get/**", "/api/ingredient/get", "/api/ingredient/get/")
                     .permitAll()
-                    // Shopping list
-                    .requestMatchers("/api/shopping/**")
+                    // Shopping list - no auth required
+                    .requestMatchers(new AntPathRequestMatcher("/api/shopping/**"))
                     .permitAll()
                     // All other endpoints require authentication
                     .anyRequest()
