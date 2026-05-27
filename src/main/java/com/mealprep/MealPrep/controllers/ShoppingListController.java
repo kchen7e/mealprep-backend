@@ -1,12 +1,12 @@
 package com.mealprep.MealPrep.controllers;
 
+import com.mealprep.MealPrep.entities.api.recipe.RecipeDTO;
 import com.mealprep.MealPrep.entities.calendar.Week;
-import com.mealprep.MealPrep.entities.recipe.Ingredient;
-import com.mealprep.MealPrep.entities.recipe.Recipe;
 import com.mealprep.MealPrep.entities.recipe.RecipeIngredient;
-import com.mealprep.MealPrep.service.IngredientService;
+import com.mealprep.MealPrep.measures.Unit;
 import com.mealprep.MealPrep.service.RecipeService;
 import java.util.*;
+import java.util.stream.Stream;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,154 +14,44 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/shopping")
 public class ShoppingListController {
   private final RecipeService recipeService;
-  private final IngredientService ingredientService;
 
-  public ShoppingListController(RecipeService recipeService, IngredientService ingredientService) {
+  public ShoppingListController(RecipeService recipeService) {
     this.recipeService = recipeService;
-    this.ingredientService = ingredientService;
   }
 
   @PostMapping(
       value = "/get",
       consumes = {MediaType.APPLICATION_JSON_VALUE})
-  public Map<String, Integer> getIngredientList(@RequestBody Week week) {
-    Map<Recipe, Integer> recipeRecords = new HashMap<>();
-    Map<Ingredient, Integer> ingredientsRecord = new HashMap<>();
-    Map<String, Integer> ingredientsRecord1 = new HashMap<>();
-    Map<RecipeIngredient, Integer> ingredientsRecord2 = new HashMap<>();
-    List<Recipe> recipes = new ArrayList<>();
+  public Map<String, Unit> getIngredientList(@RequestBody Week week) {
+    Map<String, Unit> ingredientUnits = new HashMap<>();
+
     week.getWeek()
         .forEach(
             day -> {
-              var breakfast = day.getBreakfast();
-              breakfast.forEach(
-                  recipeDTO -> {
-                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
-                    if (recipe.isPresent()) {
-                      recipeRecords.putIfAbsent(recipe.get(), 0);
-                      recipeRecords.computeIfPresent(recipe.get(), (k, v) -> v + 1);
-                      //                recipeRecords.put(recipe, recipeRecords.get(recipe) + 1);
-                      recipe
-                          .get()
-                          .getIngredients()
-                          .forEach(
-                              recipeIngredient -> {
-                                ingredientsRecord2.putIfAbsent(recipeIngredient, 0);
-                                ingredientsRecord2.computeIfPresent(
-                                    recipeIngredient, (k, v) -> v + 1);
-                                var ingredient =
-                                    ingredientService.getIngredientByName(
-                                        recipeIngredient.getIngredientName());
-                                if (ingredient.isPresent()) {
-                                  ingredientsRecord.putIfAbsent(ingredient.get(), 0);
-                                  ingredientsRecord.computeIfPresent(
-                                      ingredient.get(), (k, v) -> v + 1);
-                                  //                        ingredientsRecord.put(ingredient.get(),
-                                  //
-                                  // ingredientsRecord.get(ingredient.get()) + 1);
-                                } else {
-                                  ingredientsRecord.putIfAbsent(
-                                      new Ingredient(recipeIngredient.getIngredientName() + "*"),
-                                      0);
-                                  ingredientsRecord.putIfAbsent(
-                                      new Ingredient(recipeIngredient.getIngredientName() + "*"),
-                                      ingredientsRecord.get(
-                                          new Ingredient(
-                                              recipeIngredient.getIngredientName() + "*")));
-                                }
-                              });
-                    }
-                  });
-              var lunch = day.getLunch();
-              lunch.forEach(
-                  recipeDTO -> {
-                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
-                    if (recipe.isEmpty()) return;
-                    recipeRecords.putIfAbsent(recipe.get(), 0);
-                    recipeRecords.computeIfPresent(recipe.get(), (k, v) -> v + 1);
-                    recipe
-                        .get()
-                        .getIngredients()
-                        .forEach(
-                            recipeIngredient -> {
-                              ingredientsRecord2.putIfAbsent(recipeIngredient, 0);
-                              ingredientsRecord2.computeIfPresent(
-                                  recipeIngredient, (k, v) -> v + 1);
-                              var ingredient =
-                                  ingredientService.getIngredientByName(
-                                      recipeIngredient.getIngredientName());
-                              if (ingredient.isPresent()) {
-                                ingredientsRecord.putIfAbsent(ingredient.get(), 0);
-                                ingredientsRecord.computeIfPresent(
-                                    ingredient.get(), (k, v) -> v + 1);
-                                //                        ingredientsRecord.put(ingredient.get(),
-                                //
-                                // ingredientsRecord.get(ingredient.get()) + 1);
-                              } else {
-                                ingredientsRecord.putIfAbsent(
-                                    new Ingredient(recipeIngredient.getIngredientName() + "*"), 0);
-                                ingredientsRecord.putIfAbsent(
-                                    new Ingredient(recipeIngredient.getIngredientName() + "*"),
-                                    ingredientsRecord.get(
-                                        new Ingredient(
-                                            recipeIngredient.getIngredientName() + "*")));
-                              }
-                            });
-                  });
-              var dinner = day.getDinner();
-              dinner.forEach(
-                  recipeDTO -> {
-                    var recipe = recipeService.getRecipeByName(recipeDTO.getRecipeName());
-                    if (recipe.isPresent()) {
-
-                      recipeRecords.putIfAbsent(recipe.get(), 0);
-                      recipeRecords.computeIfPresent(recipe.get(), (k, v) -> v + 1);
-                      recipe
-                          .get()
-                          .getIngredients()
-                          .forEach(
-                              recipeIngredient -> {
-                                ingredientsRecord2.putIfAbsent(recipeIngredient, 0);
-                                ingredientsRecord2.computeIfPresent(
-                                    recipeIngredient, (k, v) -> v + 1);
-                                var ingredient =
-                                    ingredientService.getIngredientByName(
-                                        recipeIngredient.getIngredientName());
-                                if (ingredient.isPresent()) {
-                                  ingredientsRecord.putIfAbsent(ingredient.get(), 0);
-                                  ingredientsRecord.computeIfPresent(
-                                      ingredient.get(), (k, v) -> v + 1);
-                                  //                        ingredientsRecord.put(ingredient.get(),
-                                  //
-                                  // ingredientsRecord.get(ingredient.get()) + 1);
-                                } else {
-                                  ingredientsRecord.putIfAbsent(
-                                      new Ingredient(recipeIngredient.getIngredientName() + "*"),
-                                      0);
-                                  ingredientsRecord.putIfAbsent(
-                                      new Ingredient(recipeIngredient.getIngredientName() + "*"),
-                                      ingredientsRecord.get(
-                                          new Ingredient(
-                                              recipeIngredient.getIngredientName() + "*")));
-                                }
-                              });
-                    }
-                  });
+              Stream.of(day.getBreakfast(), day.getLunch(), day.getDinner())
+                  .flatMap(List::stream)
+                  .forEach(recipeDTO -> processRecipe(recipeDTO, ingredientUnits));
             });
-    ingredientsRecord
-        .keySet()
-        .forEach(
-            key -> ingredientsRecord1.put(key.getIngredientName(), ingredientsRecord.get(key)));
-    return ingredientsRecord1;
+
+    return ingredientUnits;
   }
 
-  //    @PostMapping(value = "/get", consumes = {MediaType.APPLICATION_JSON_VALUE})
-  //    public Map<String, Integer> getShoppingList(@RequestBody Week week) {
-  //        Map<String, Integer> ingredientList = getIngredientList(week);
-  //        Map<String, Integer> shoppingList = new HashMap<>();
-  //
-  //
-  //        return shoppingList;
-  //    }
+  private void processRecipe(RecipeDTO recipeDTO, Map<String, Unit> ingredientUnits) {
+    recipeService
+        .getRecipeByName(recipeDTO.getRecipeName())
+        .ifPresent(
+            recipe ->
+                recipe
+                    .getIngredients()
+                    .forEach(
+                        recipeIngredient -> addIngredientUnit(recipeIngredient, ingredientUnits)));
+  }
 
+  private void addIngredientUnit(
+      RecipeIngredient recipeIngredient, Map<String, Unit> ingredientUnits) {
+    String ingredientName = recipeIngredient.getIngredientName();
+    Unit unit = recipeIngredient.getUnit();
+
+    ingredientUnits.merge(ingredientName, unit, Unit::combine);
+  }
 }

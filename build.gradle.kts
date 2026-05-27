@@ -32,7 +32,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("io.minio:minio:8.5.7")
     implementation("org.springframework.retry:spring-retry")
-    implementation("org.springframework:spring-aspects")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
