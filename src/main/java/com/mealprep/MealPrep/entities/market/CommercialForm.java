@@ -2,6 +2,8 @@ package com.mealprep.MealPrep.entities.market;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -28,6 +30,7 @@ public class CommercialForm {
   // on shelf as a bag, can etc.
   @Getter
   @Setter
+  @Enumerated(EnumType.STRING)
   @Column(name = "purchase_unit")
   SaleUnitType purchaseUnit;
 
